@@ -4,7 +4,7 @@ export interface Questions{
       category: string,
       question: string,
       correct_answer:string,
-      incorrect_answers: string[]
+      choices: string[]
 }
 
 export interface QuestionAnswers {
@@ -13,3 +13,10 @@ export interface QuestionAnswers {
     choices: string[]
 }
 
+export interface QuestionRadioType{
+    choice:boolean[]
+}
+
+export interface QuestionMulitChoiceType{
+    choices:[]
+}

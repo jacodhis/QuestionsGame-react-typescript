@@ -4,6 +4,8 @@ import {results} from  './questionsApi'
 import Button from './Questions/commons/Button'
 
 import MyResult  from './Questions/MyResult';
+import RadioQuestionType from './Questions/QuestionTypes/RadioQuestionType';
+import MultiChoiceSingleQsnType from './Questions/QuestionTypes/MultiChoiceSingleQsnType';
 
 interface QuestionAnswers {
     question: string,
@@ -32,7 +34,7 @@ interface Markings {
 
 interface MyAnswers {
   question: QuestionAnswers,
-  myAnswer : string
+  myAnswer : string | null
 }
 
 function App() {
@@ -44,7 +46,7 @@ function App() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
   const currentQuestion = questions[currentQuestionIndex];
 
-  const [answer, setAnswer] = useState<string>("")
+  const [answer, setAnswer] = useState<string | null >(null)
   const [score, setScore] = useState<number>(0)
   const [scorePercentage, setScorePercentage] = useState<number>(0)
   const [isLastQuestion, setIsLastQuestion] = useState<boolean>(false)
@@ -61,9 +63,9 @@ function App() {
 
   const markThisQuestion = () => {
     const questionToMark = questions[currentQuestionIndex];
-    if (answer.trim() !== "") {
+    if (answer !== "") {
         
-          if (answer.trim() === questionToMark.correct_answer) {
+          if (answer === questionToMark.correct_answer) {
             const myScore = score + 1;
             setScore(myScore)
             const percent: number = (myScore / questions.length) * 100;
@@ -77,7 +79,7 @@ function App() {
 
           const  answeredQuestion : MyAnswers = {
             question: question,
-            myAnswer:answer
+            myAnswer:answer 
           }
           const questionExists = myAnswers.some(question => question.question.question == questionToMark.question)
           if (!questionExists) {
@@ -92,13 +94,13 @@ function App() {
   }
 
   const previousHandler = () =>{
-    setCurrentQuestionIndex(currentQuestionIndex - 1)
+    const previousQuestionIndex = currentQuestionIndex - 1 ;
+    setCurrentQuestionIndex(previousQuestionIndex)
   }
 
 
   const nextHandler = () => {
 
-   
     const questionsLength = questions.length;
     // const questionToMark = questions[currentQuestionIndex]
     if (currentQuestionIndex + 1 == questionsLength) {
@@ -127,10 +129,12 @@ function App() {
   }
 
   const resetHandler = () => {
+    setCurrentQuestionIndex(0)
     setIsLastQuestion(false)
     setScore(0)
     setScorePercentage(0)
     setMyAnswers([])
+    setAnswer(null)
     setMarkings({
       correct: 0,
       wrong: 0,
@@ -142,28 +146,36 @@ function App() {
     const value = e.target.value
     setAnswer(value)
   }
+  const bgColor = {backgroundColor:'#3d434b'}
+
+  const buttonPrevious = currentQuestionIndex !== 0 && <Button onClick={previousHandler} name={`Previous`}  backgroundColor={ bgColor}/>
+
   const buttonToNext = currentQuestionIndex + 1 === questions.length ?
     <Button onClick={nextHandler} name={`Finish`} /> : <Button onClick={nextHandler} name={ `Next Question`} />
 
 
-  const buttonPrevious = currentQuestionIndex !== 0 && <Button onClick={previousHandler} name={`Previous`} />
-      
  
   const question = isLastQuestion ? <div>
-      <MyResult markings={markings} myAnswers={myAnswers} resetHandler={resetHandler} totalQuestions={questions.length} />
+      <MyResult  markings={markings} myAnswers={myAnswers} resetHandler={resetHandler} totalQuestions={questions.length}
+      scorePercentage={scorePercentage}
+       />
     </div>
     : <div className="card" style={{ width: '50rem', padding: '0px' }}>
     <div className='img-container' style={{ height:' 250px' }}>
       {questionBackground}
     </div>
+
     <div className='question-content'>
-      <p>Score { Math.round(scorePercentage) } %</p>
+      <div>Score { Math.round(scorePercentage) } %</div>
       <div className="card-body">
         <h5 className="card-title">Exam ({currentQuestionIndex + 1 }/{ questions.length})</h5>
       <p className="card-text">{currentQuestion.question || "No question available"}</p>
-      <input type='text' placeholder='Enter Answer' className='form-control text-center'
-      value={answer}
-      onChange={handleAnswer} />
+      <p>{currentQuestion.correct_answer}</p>
+
+      {currentQuestion.type == 'multiple' ?
+       <MultiChoiceSingleQsnType answer={answer || ''} handleAnswer={handleAnswer}/>
+      : <RadioQuestionType question={currentQuestion} handleAnswer={handleAnswer}/>
+      }
       
         <div className="d-flex justify-content-center gap-2">
           {buttonPrevious}
